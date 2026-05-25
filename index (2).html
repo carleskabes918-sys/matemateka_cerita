@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Numeria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .story-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+        .header-font {
+            font-family: 'Fredoka One', cursive;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .correct-pulse {
+            animation: pulseGreen 0.5s;
+        }
+        @keyframes pulseGreen {
+            0% { background-color: white; }
+            50% { background-color: #d1fae5; }
+            100% { background-color: white; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="story-card p-6 md:p-10">
+    <div id="game-container" class="fade-in">
+        <!-- Content will be injected here by JS -->
+    </div>
+</div>
+
+<script>
+    const storyData = [
+        {
+            id: 0,
+            title: "Gerbang Desa Numeria",
+            text: "Selamat datang, Pahlawan! Desa Numeria sedang dalam bahaya. Penyihir 'Minus' telah mengunci gerbang desa dengan gembok ajaib. Untuk membukanya, kamu harus menjumlahkan jumlah apel di keranjang kiri (15) dan keranjang kanan (27). Berapa totalnya?",
+            question: "15 + 27 = ?",
+            answer: 42,
+            image: `<svg viewBox="0 0 200 120" class="w-full h-40 mb-6"><rect x="10" y="80" width="180" height="40" fill="#8B4513" rx="5"/><path d="M50 80 Q100 20 150 80" fill="none" stroke="#5D4037" stroke-width="5"/><circle cx="60" cy="70" r="8" fill="#e53e3e"/><circle cx="140" cy="70" r="8" fill="#e53e3e"/></svg>`,
+            hint: "Tips: Jumlahkan satuannya dulu (5+7), lalu puluhannya."
+        },
+        {
+            id: 1,
+            title: "Hutan Geometris",
+            text: "Kamu berhasil masuk! Namun jalan terhalang oleh jembatan yang rusak. Jembatan ini butuh balok kayu berbentuk persegi panjang. Jika panjang balok 12 meter dan lebarnya 5 meter, berapakah luas permukaan atas balok tersebut?",
+            question: "Luas (12 x 5) = ?",
+            answer: 60,
+            image: `<svg viewBox="0 0 200 120" class="w-full h-40 mb-6"><rect x="40" y="40" width="120" height="50" fill="#D2B48C" stroke="#8B4513" stroke-width="2"/><text x="100" y="35" text-anchor="middle" font-size="10">12m</text><text x="30" y="65" text-anchor="middle" font-size="10" transform="rotate(-90 30,65)">5m</text></svg>`,
+            hint: "Rumus Luas = Panjang x Lebar."
+        },
+        {
+            id: 2,
+            title: "Teka-teki Sungai Pembagi",
+            text: "Di depanmu ada sungai deras. Ada 24 ekor ikan yang ingin menyeberang, tapi hanya ada 4 perahu daun. Jika ikan-ikan itu dibagi rata ke setiap perahu, berapa banyak ikan di setiap perahu?",
+            question: "24 ÷ 4 = ?",
+            answer: 6,
+            image: `<svg viewBox="0 0 200 120" class="w-full h-40 mb-6"><path d="M0 80 Q50 60 100 80 T200 80" fill="none" stroke="#3182ce" stroke-width="3"/><circle cx="50" cy="70" r="5" fill="#f6ad55"/><circle cx="100" cy="70" r="5" fill="#f6ad55"/><circle cx="150" cy="70" r="5" fill="#f6ad55"/></svg>`,
+            hint: "Gunakan perkalian terbalik: 4 dikali berapa supaya jadi 24?"
+        },
+        {
+            id: 3,
+            title: "Menara Penyihir Minus",
+            text: "Akhirnya sampai di menara! Si Penyihir memberikan tantangan terakhir. 'Aku punya 100 koin sihir, aku berikan 35 koin ke naga dan 20 koin ke goblin. Berapa sisa koinku sekarang?'",
+            question: "100 - (35 + 20) = ?",
+            answer: 45,
+            image: `<svg viewBox="0 0 200 120" class="w-full h-40 mb-6"><path d="M80 100 L120 100 L110 20 L90 20 Z" fill="#4A5568"/><circle cx="100" cy="15" r="10" fill="#ECC94B" class="animate-pulse"/></svg>`,
+            hint: "Hitung dulu total koin yang diberikan, lalu kurangi dari 100."
+        }
+    ];
+
+    let currentStep = 0;
+    const gameContainer = document.getElementById('game-container');
+
+    function renderScene() {
+        const scene = storyData[currentStep];
+        if (!scene) {
+            renderVictory();
+            return;
+        }
+
+        gameContainer.innerHTML = `
+            <div class="mb-4 flex justify-between items-center">
+                <span class="text-xs font-bold text-indigo-600 uppercase tracking-widest">Bab ${currentStep + 1} dari ${storyData.length}</span>
+                <div class="h-2 w-24 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-indigo-500" style="width: ${(currentStep / storyData.length) * 100}%"></div>
+                </div>
+            </div>
+            
+            <h1 class="header-font text-3xl text-gray-800 mb-4">${scene.title}</h1>
+            <div class="mb-6">${scene.image}</div>
+            <p class="text-gray-600 mb-6 leading-relaxed">${scene.text}</p>
+            
+            <div class="bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-100">
+                <label class="block text-sm font-semibold text-indigo-900 mb-2">${scene.question}</label>
+                <div class="flex gap-3">
+                    <input type="number" id="answer-input" 
+                           class="flex-1 px-4 py-3 rounded-xl border-2 border-indigo-200 focus:border-indigo-500 focus:outline-none text-xl font-bold text-center" 
+                           placeholder="?" autofocus>
+                    <button onclick="checkAnswer()" 
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-lg">
+                        Jawab!
+                    </button>
+                </div>
+                <p id="feedback" class="mt-3 text-sm font-medium hidden"></p>
+            </div>
+            
+            <button onclick="showHint()" class="mt-4 text-xs text-indigo-400 hover:text-indigo-600 underline">Butuh bantuan?</button>
+        `;
+
+        // Handle enter key
+        document.getElementById('answer-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('answer-input');
+        const feedback = document.getElementById('feedback');
+        const userAnswer = parseInt(input.value);
+        const scene = storyData[currentStep];
+
+        if (userAnswer === scene.answer) {
+            feedback.textContent = "Luar biasa! Jawabanmu benar. Melanjutkan perjalanan...";
+            feedback.className = "mt-3 text-sm font-medium text-green-600 block";
+            input.classList.add('border-green-500');
+            
+            setTimeout(() => {
+                currentStep++;
+                renderScene();
+            }, 1500);
+        } else {
+            feedback.textContent = "Oops! Coba hitung lagi ya, kamu pasti bisa!";
+            feedback.className = "mt-3 text-sm font-medium text-red-500 block";
+            input.classList.add('border-red-500');
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    function showHint() {
+        const scene = storyData[currentStep];
+        const feedback = document.getElementById('feedback');
+        feedback.textContent = scene.hint;
+        feedback.className = "mt-3 text-sm font-medium text-indigo-500 block italic";
+    }
+
+    function renderVictory() {
+        gameContainer.innerHTML = `
+            <div class="text-center py-10">
+                <div class="text-6xl mb-6">🏆</div>
+                <h1 class="header-font text-4xl text-gray-800 mb-4">Misi Berhasil!</h1>
+                <p class="text-gray-600 mb-8">Penyihir Minus telah kalah dan Desa Numeria kembali damai berkat kecerdasanmu dalam berhitung.</p>
+                <div class="bg-yellow-50 border-2 border-yellow-200 p-6 rounded-2xl mb-8">
+                    <p class="text-yellow-800 font-bold">Gelar Kamu:</p>
+                    <p class="text-3xl header-font text-yellow-600">Master Matematika Sejati</p>
+                </div>
+                <button onclick="resetGame()" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1">
+                    Main Lagi
+                </button>
+            </div>
+        `;
+    }
+
+    function resetGame() {
+        currentStep = 0;
+        renderScene();
+    }
+
+    window.onload = renderScene;
+
+</script>
+</body>
+</html>
